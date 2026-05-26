@@ -1,23 +1,28 @@
 import streamlit as st
-import pickle
+import pandas as pd
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
-# Load trained model
-model = pickle.load(open('model.pkl', 'rb'))
+# Load dataset
+df = pd.read_csv("housing.csv")
 
-# Title
+# Features and target
+X = df[['area', 'bedrooms', 'bathrooms']]
+y = df['price']
+
+# Train model
+model = LinearRegression()
+model.fit(X, y)
+
+# UI
 st.title("🏠 House Price Prediction")
 
-st.write("Enter house details below:")
-
-# Inputs
-area = st.number_input("Area (sqft)", min_value=100)
+area = st.number_input("Area", min_value=100)
 
 bedrooms = st.number_input("Bedrooms", min_value=1)
 
 bathrooms = st.number_input("Bathrooms", min_value=1)
 
-# Prediction
 if st.button("Predict Price"):
 
     features = np.array([[area, bedrooms, bathrooms]])
