@@ -1,11 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score
 
 # Title
 st.title("🏠 House Price Prediction System")
@@ -26,52 +21,14 @@ if uploaded_file is not None:
 
     st.dataframe(df)
 
-    # Features
-    X = df.drop("price", axis=1)
+    # Graph
+    st.subheader("📊 Area vs Price Graph")
 
-    # Target
-    y = df["price"]
+    chart_data = df[["area", "price"]]
 
-    # Split Data
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=0.2,
-        random_state=42
-    )
+    chart_data = chart_data.set_index("area")
 
-    # Train Model
-    model = LinearRegression()
-
-    model.fit(X_train, y_train)
-
-    # Predict
-    y_pred = model.predict(X_test)
-
-    # Accuracy
-    accuracy = r2_score(y_test, y_pred)
-
-    st.subheader("✅ Model Accuracy")
-
-    st.success(f"Accuracy Score: {accuracy:.2f}")
-
-    # Scatter Plot
-    st.subheader("📊 Area vs Price")
-
-    fig, ax = plt.subplots()
-
-    ax.scatter(df["area"], df["price"])
-
-    ax.set_xlabel("Area")
-
-    ax.set_ylabel("Price")
-
-    st.pyplot(fig)
-
-    # Correlation Matrix
-    st.subheader("📈 Correlation Matrix")
-
-    st.dataframe(df.corr())
+    st.line_chart(chart_data)
 
     # Prediction Inputs
     st.subheader("🏠 Predict House Price")
@@ -90,17 +47,21 @@ if uploaded_file is not None:
 
     if st.button("Predict Price"):
 
-        input_data = np.array([[
-            area,
-            bedrooms,
-            bathrooms,
-            floors,
-            parking,
-            age
-        ]])
-
-        prediction = model.predict(input_data)
+        # Simple Prediction Formula
+        prediction = (
+            area * 3000 +
+            bedrooms * 500000 +
+            bathrooms * 300000 +
+            floors * 200000 +
+            parking * 150000 -
+            age * 10000
+        )
 
         st.success(
-            f"Predicted House Price: ₹ {prediction[0]:,.2f}"
+            f"Predicted House Price: ₹ {prediction:,.2f}"
         )
+
+    # Correlation
+    st.subheader("📈 Correlation Matrix")
+
+    st.dataframe(df.corr())
