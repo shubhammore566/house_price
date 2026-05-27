@@ -2,16 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
-
 # Title
-st.title("🏠 Smart House Price Prediction System")
+st.title("🏠 Smart House Price Prediction")
 
 # Upload CSV
 uploaded_file = st.file_uploader(
-    "Upload Any House Price CSV File",
+    "Upload CSV File",
     type=["csv"]
 )
 
@@ -22,7 +18,6 @@ if uploaded_file is not None:
 
     # Show Dataset
     st.subheader("📄 Dataset")
-
     st.dataframe(df)
 
     # Dataset Info
@@ -32,105 +27,74 @@ if uploaded_file is not None:
 
     st.write("Columns :", df.shape[1])
 
-    # Select Numeric Columns
+    # Numeric Columns
     numeric_cols = df.select_dtypes(
         include=np.number
     ).columns.tolist()
 
-    # Check Numeric Columns
-    if len(numeric_cols) < 2:
+    st.subheader("📊 Numeric Columns")
 
-        st.error(
-            "Dataset must contain at least 2 numeric columns"
-        )
+    st.write(numeric_cols)
 
-    else:
+    # Correlation Matrix
+    st.subheader("📈 Correlation Matrix")
 
-        # Select Target Column
-        target_column = st.selectbox(
-            "Select Target Column (Price)",
-            numeric_cols
-        )
+    st.dataframe(
+        df[numeric_cols].corr()
+    )
 
-        # Features
-        feature_columns = [
-            col for col in numeric_cols
-            if col != target_column
-        ]
-
-        X = df[feature_columns]
-
-        y = df[target_column]
-
-        # Train Test Split
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=0.2,
-            random_state=42
-        )
-
-        # Train Model
-        model = LinearRegression()
-
-        model.fit(X_train, y_train)
-
-        # Prediction
-        y_pred = model.predict(X_test)
-
-        # Accuracy
-        accuracy = r2_score(y_test, y_pred) * 100
-
-        # Accuracy
-        st.subheader("✅ Model Accuracy")
-
-        st.success(f"Accuracy : {accuracy:.2f}%")
-
-        # Scatter Chart
-        st.subheader("📊 Scatter Plot")
+    # Scatter Plot
+    if len(numeric_cols) >= 2:
 
         x_axis = st.selectbox(
             "Select X-axis",
-            feature_columns
+            numeric_cols
+        )
+
+        y_axis = st.selectbox(
+            "Select Y-axis",
+            numeric_cols
         )
 
         scatter_data = pd.DataFrame({
             x_axis: df[x_axis],
-            target_column: df[target_column]
+            y_axis: df[y_axis]
         })
 
         st.scatter_chart(
             scatter_data,
             x=x_axis,
-            y=target_column
+            y=y_axis
         )
 
-        # Correlation Matrix
-        st.subheader("📈 Correlation Matrix")
+    # Prediction Section
+    st.subheader("🏠 Predict House Price")
 
-        st.dataframe(df[numeric_cols].corr())
+    area = st.number_input("Area", value=1000)
 
-        # Prediction Section
-        st.subheader("🏠 Predict House Price")
+    bedrooms = st.number_input("Bedrooms", value=2)
 
-        user_input = []
+    bathrooms = st.number_input("Bathrooms", value=2)
 
-        for col in feature_columns:
+    floors = st.number_input("Floors", value=1)
 
-            value = st.number_input(
-                f"Enter {col}",
-                value=0.0
-            )
+    parking = st.number_input("Parking", value=1)
 
-            user_input.append(value)
+    age = st.number_input("Age", value=5)
 
-        # Predict Button
-        if st.button("Predict Price"):
+    # Predict Button
+    if st.button("Predict Price"):
 
-            prediction = model.predict(
-                [user_input]
-            )
+        # Manual Formula
+        prediction = (
+            area * 3000 +
+            bedrooms * 500000 +
+            bathrooms * 300000 +
+            floors * 200000 +
+            parking * 100000 -
+            age * 10000
+        )
 
-            st.success(
-                f"Predicted Price : ₹ {prediction[0]:,.2f}"
-            )
+        st.success(
+            f"Predicted House Price : ₹ {prediction:,.2f}"
+        )
