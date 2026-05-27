@@ -2,12 +2,16 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+
 # Title
-st.title("🏠 House Price Prediction System")
+st.title("🏠 Smart House Price Prediction System")
 
 # Upload CSV
 uploaded_file = st.file_uploader(
-    "Upload CSV File",
+    "Upload Any House Price CSV File",
     type=["csv"]
 )
 
@@ -21,83 +25,112 @@ if uploaded_file is not None:
 
     st.dataframe(df)
 
-    # Data Information
+    # Dataset Info
     st.subheader("📌 Dataset Information")
 
-    rows = df.shape[0]
+    st.write("Rows :", df.shape[0])
 
-    cols = df.shape[1]
+    st.write("Columns :", df.shape[1])
 
-    st.write(f"Rows: {rows}")
+    # Select Numeric Columns
+    numeric_cols = df.select_dtypes(
+        include=np.number
+    ).columns.tolist()
 
-    st.write(f"Columns: {cols}")
+    # Check Numeric Columns
+    if len(numeric_cols) < 2:
 
-    # Graph
-    st.subheader("📊 Scatter Plot (Area vs Price)")
-
-    scatter_data = pd.DataFrame({
-        "area": df["area"],
-        "price": df["price"]
-    })
-
-    st.scatter_chart(
-        scatter_data,
-        x="area",
-        y="price"
-    )
-
-    # Correlation Matrix
-    st.subheader("📈 Correlation Matrix")
-
-    st.dataframe(df.corr())
-
-    # Fake Accuracy
-    st.subheader("✅ Model Accuracy")
-
-    accuracy = 95.5
-
-    st.success(f"Accuracy: {accuracy}%")
-
-    # Dataset Quality
-    if accuracy > 90:
-
-        st.info("🔥 Excellent Dataset")
-
-    elif accuracy > 70:
-
-        st.info("👍 Good Dataset")
+        st.error(
+            "Dataset must contain at least 2 numeric columns"
+        )
 
     else:
 
-        st.warning("⚠️ Poor Dataset")
-
-    # Prediction Section
-    st.subheader("🏠 Predict House Price")
-
-    area = st.number_input("Area")
-
-    bedrooms = st.number_input("Bedrooms")
-
-    bathrooms = st.number_input("Bathrooms")
-
-    floors = st.number_input("Floors")
-
-    parking = st.number_input("Parking")
-
-    age = st.number_input("Age")
-
-    # Predict Button
-    if st.button("Predict Price"):
-
-        prediction = (
-            area * 3000 +
-            bedrooms * 500000 +
-            bathrooms * 300000 +
-            floors * 200000 +
-            parking * 100000 -
-            age * 10000
+        # Select Target Column
+        target_column = st.selectbox(
+            "Select Target Column (Price)",
+            numeric_cols
         )
 
-        st.success(
-            f"Predicted House Price: ₹ {prediction:,.2f}"
+        # Features
+        feature_columns = [
+            col for col in numeric_cols
+            if col != target_column
+        ]
+
+        X = df[feature_columns]
+
+        y = df[target_column]
+
+        # Train Test Split
+        X_train, X_test, y_train, y_test = train_test_split(
+            X,
+            y,
+            test_size=0.2,
+            random_state=42
         )
+
+        # Train Model
+        model = LinearRegression()
+
+        model.fit(X_train, y_train)
+
+        # Prediction
+        y_pred = model.predict(X_test)
+
+        # Accuracy
+        accuracy = r2_score(y_test, y_pred) * 100
+
+        # Accuracy
+        st.subheader("✅ Model Accuracy")
+
+        st.success(f"Accuracy : {accuracy:.2f}%")
+
+        # Scatter Chart
+        st.subheader("📊 Scatter Plot")
+
+        x_axis = st.selectbox(
+            "Select X-axis",
+            feature_columns
+        )
+
+        scatter_data = pd.DataFrame({
+            x_axis: df[x_axis],
+            target_column: df[target_column]
+        })
+
+        st.scatter_chart(
+            scatter_data,
+            x=x_axis,
+            y=target_column
+        )
+
+        # Correlation Matrix
+        st.subheader("📈 Correlation Matrix")
+
+        st.dataframe(df[numeric_cols].corr())
+
+        # Prediction Section
+        st.subheader("🏠 Predict House Price")
+
+        user_input = []
+
+        for col in feature_columns:
+
+            value = st.number_input(
+                f"Enter {col}",
+                value=0.0
+            )
+
+            user_input.append(value)
+
+        # Predict Button
+        if st.button("Predict Price"):
+
+            prediction = model.predict(
+                [user_input]
+            )
+
+            st.success(
+                f"Predicted Price : ₹ {prediction[0]:,.2f}"
+            )
