@@ -11,7 +11,7 @@ st.set_page_config(
 # Title
 st.title("🏠 Smart House Price Prediction System")
 
-# Upload CSV File
+# Upload CSV
 uploaded_file = st.file_uploader(
     "Upload CSV File",
     type=["csv"]
@@ -22,7 +22,7 @@ if uploaded_file is not None:
     # Read CSV
     df = pd.read_csv(uploaded_file)
 
-    # Limit rows for speed
+    # Limit rows for fast performance
     df = df.head(100)
 
     # Dataset Preview
@@ -53,10 +53,10 @@ if uploaded_file is not None:
 
         st.dataframe(corr)
 
-    # Linear Regression Graph
+    # Scatter Plot
     if len(numeric_cols) >= 2:
 
-        st.subheader("📉 Linear Regression Graph")
+        st.subheader("📊 Scatter Plot with Regression Line")
 
         # Select X-axis
         x_col = st.selectbox(
@@ -81,28 +81,23 @@ if uploaded_file is not None:
         # Graph Data
         graph_df = df[[x_col, y_col]].dropna()
 
-        # Sort Values
-        graph_df = graph_df.sort_values(
-            by=x_col
+        # Scatter Plot
+        st.scatter_chart(
+            graph_df,
+            x=x_col,
+            y=y_col
         )
 
-        # X and Y
+        # Regression Line Equation
         x = graph_df[x_col]
 
         y = graph_df[y_col]
 
-        # Regression Line
+        # Best Fit Line
         m, b = np.polyfit(x, y, 1)
 
-        graph_df["Regression_Line"] = (
-            m * x + b
-        )
-
-        # Show Line Chart
-        st.line_chart(
-            graph_df[
-                [y_col, "Regression_Line"]
-            ]
+        st.write(
+            f"📉 Regression Equation : y = {m:.2f}x + {b:.2f}"
         )
 
     # Accuracy Section
