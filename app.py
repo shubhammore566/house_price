@@ -11,7 +11,7 @@ st.set_page_config(
 # Title
 st.title("🏠 House Price Prediction")
 
-# Upload File
+# Upload CSV
 uploaded_file = st.file_uploader(
     "Upload CSV File",
     type=["csv"]
@@ -22,16 +22,16 @@ if uploaded_file is not None:
     # Read CSV
     df = pd.read_csv(uploaded_file)
 
-    # Limit Rows
+    # Limit Data
     df = df.head(100)
 
-    # Dataset Preview
+    # Dataset
     st.subheader("📄 Dataset Preview")
 
     st.dataframe(df.head(10))
 
     # Dataset Info
-    st.subheader("📌 Dataset Info")
+    st.subheader("📌 Dataset Information")
 
     st.write(f"Rows : {df.shape[0]}")
 
@@ -47,9 +47,49 @@ if uploaded_file is not None:
 
         st.subheader("📈 Correlation Matrix")
 
-        corr = df[numeric_cols].corr()
+        st.dataframe(
+            df[numeric_cols].corr()
+        )
 
-        st.dataframe(corr)
+    # Linear Regression Graph
+    if len(numeric_cols) >= 2:
+
+        st.subheader("📉 Linear Regression Graph")
+
+        x_col = st.selectbox(
+            "Select X-axis",
+            numeric_cols,
+            key="x"
+        )
+
+        y_col = st.selectbox(
+            "Select Y-axis",
+            numeric_cols,
+            key="y"
+        )
+
+        # Sort Values
+        graph_df = df[[x_col, y_col]].dropna()
+
+        graph_df = graph_df.sort_values(
+            by=x_col
+        )
+
+        # Create Simple Regression Line
+        x = graph_df[x_col]
+
+        y = graph_df[y_col]
+
+        # Best Fit Line using numpy
+        m, b = np.polyfit(x, y, 1)
+
+        graph_df["Regression_Line"] = m * x + b
+
+        st.line_chart(
+            graph_df[
+                [y_col, "Regression_Line"]
+            ]
+        )
 
     # Accuracy
     st.subheader("✅ Model Accuracy")
@@ -58,7 +98,7 @@ if uploaded_file is not None:
 
     st.info("Testing Accuracy : 92.3%")
 
-    # Prediction
+    # Prediction Section
     st.subheader("🏠 Predict House Price")
 
     area = st.number_input(
