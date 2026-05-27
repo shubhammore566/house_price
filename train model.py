@@ -1,19 +1,29 @@
 import pandas as pd
-from sklearn.linear_model import LinearRegression
 import pickle
 
-# Load dataset
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
+# Load Dataset
 df = pd.read_csv("housing.csv")
 
-# Features and target
-X = df[['area', 'bedrooms', 'bathrooms']]
-y = df['price']
+# Features
+X = df[["Bedrooms", "Size_sqft", "Age_years"]]
 
-# Train model
+# Target
+y = df["Price_Lakhs_INR"]
+
+# Split Data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Train Model
 model = LinearRegression()
-model.fit(X, y)
 
-# Save model
-pickle.dump(model, open('model.pkl', 'wb'))
+model.fit(X_train, y_train)
 
-print("Model trained and saved successfully!")
+# Save Model
+pickle.dump(model, open("model.pkl", "wb"))
+
+print("Model Saved Successfully")
