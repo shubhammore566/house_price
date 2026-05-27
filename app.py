@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
@@ -9,12 +10,13 @@ from sklearn.preprocessing import LabelEncoder
 # Title
 st.title("🏠 House Price Prediction System")
 
-# Upload CSV
+# Upload CSV File
 uploaded_file = st.file_uploader(
     "Upload CSV File",
     type=["csv"]
 )
 
+# If file uploaded
 if uploaded_file is not None:
 
     # Read CSV
@@ -37,15 +39,16 @@ if uploaded_file is not None:
     st.subheader("📋 Column Names")
     st.write(df.columns)
 
-    # Handle Missing Values
+    # Remove Missing Values
     df = df.dropna()
 
-    # Convert total_sqft to numeric
+    # Convert total_sqft into numeric
     df["total_sqft"] = pd.to_numeric(
         df["total_sqft"],
         errors="coerce"
     )
 
+    # Remove invalid rows
     df = df.dropna()
 
     # Scatter Plot
@@ -62,7 +65,7 @@ if uploaded_file is not None:
         y="price"
     )
 
-    # Encode Categorical Columns
+    # Encode categorical columns
     le = LabelEncoder()
 
     for col in df.columns:
@@ -91,18 +94,23 @@ if uploaded_file is not None:
 
     model.fit(X_train, y_train)
 
-    # Prediction
+    # Prediction on test data
     y_pred = model.predict(X_test)
 
     # Accuracy
-    accuracy = r2_score(y_test, y_pred) * 100
+    accuracy = r2_score(
+        y_test,
+        y_pred
+    ) * 100
 
     # Correlation Matrix
     st.subheader("📈 Correlation Matrix")
 
-    st.dataframe(df.corr(numeric_only=True))
+    st.dataframe(
+        df.corr(numeric_only=True)
+    )
 
-    # Accuracy
+    # Accuracy Display
     st.subheader("✅ Model Accuracy")
 
     st.success(
@@ -126,15 +134,18 @@ if uploaded_file is not None:
     st.subheader("🏠 Predict House Price")
 
     total_sqft = st.number_input(
-        "Total Square Feet"
+        "Total Square Feet",
+        min_value=100.0
     )
 
     bath = st.number_input(
-        "Bathrooms"
+        "Bathrooms",
+        min_value=1
     )
 
     balcony = st.number_input(
-        "Balcony"
+        "Balcony",
+        min_value=0
     )
 
     # Predict Button
@@ -142,15 +153,15 @@ if uploaded_file is not None:
 
         input_data = np.array([
             [
-                0,
-                0,
-                0,
-                0,
+                0,  # area_type
+                0,  # availability
+                0,  # location
+                0,  # size
                 total_sqft,
                 bath,
                 balcony
             ]
-        )
+        ])
 
         prediction = model.predict(
             input_data
