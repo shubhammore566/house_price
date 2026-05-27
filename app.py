@@ -1,103 +1,70 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pickle
 
-# Title
-st.title("🏠 House Price Prediction System")
+# Load Model
+model = pickle.load(open('house_model.pkl', 'rb'))
 
-# Upload CSV
-uploaded_file = st.file_uploader(
-    "Upload CSV File",
-    type=["csv"]
-)
+st.title("House Price Prediction App")
+
+# Upload Dataset
+uploaded_file = st.file_uploader("Upload CSV File", type=['csv'])
 
 if uploaded_file is not None:
 
-    # Read CSV
     df = pd.read_csv(uploaded_file)
 
-    # Show Dataset
-    st.subheader("📄 Dataset")
+    st.subheader("Dataset")
+    st.write(df.head())
 
-    st.dataframe(df)
+    st.subheader("Dataset Shape")
+    st.write(df.shape)
 
-    # Data Information
-    st.subheader("📌 Dataset Information")
+    st.subheader("Dataset Information")
+    st.write(df.describe())
 
-    rows = df.shape[0]
+    # Heatmap
+    st.subheader("Correlation Heatmap")
 
-    cols = df.shape[1]
+    corr = df.corr(numeric_only=True)
 
-    st.write(f"Rows: {rows}")
+    fig, ax = plt.subplots(figsize=(8,6))
 
-    st.write(f"Columns: {cols}")
-
-    # Graph
-    st.subheader("📊 Scatter Plot (Area vs Price)")
-
-    scatter_data = pd.DataFrame({
-        "area": df["area"],
-        "price": df["price"]
-    })
-
-    st.scatter_chart(
-        scatter_data,
-        x="area",
-        y="price"
+    sns.heatmap(
+        corr,
+        annot=True,
+        cmap='YlGnBu',
+        ax=ax
     )
 
-    # Correlation Matrix
-    st.subheader("📈 Correlation Matrix")
+    st.pyplot(fig)
 
-    st.dataframe(df.corr())
+    # Scatter Plot
+    st.subheader("Scatter Plot")
 
-    # Fake Accuracy
-    st.subheader("✅ Model Accuracy")
+    fig2, ax2 = plt.subplots()
 
-    accuracy = 95.5
+    ax2.scatter(df.iloc[:,1], df.iloc[:,-1])
 
-    st.success(f"Accuracy: {accuracy}%")
+    ax2.set_xlabel("Size")
+    ax2.set_ylabel("Price")
 
-    # Dataset Quality
-    if accuracy > 90:
+    st.pyplot(fig2)
 
-        st.info("🔥 Excellent Dataset")
+    # User Input
+    st.subheader("Enter House Details")
 
-    elif accuracy > 70:
+    bedrooms = st.number_input("Bedrooms", min_value=1)
 
-        st.info("👍 Good Dataset")
+    size = st.number_input("Size Sqft", min_value=100)
 
-    else:
+    age = st.number_input("Age Years", min_value=0)
 
-        st.warning("⚠️ Poor Dataset")
-
-    # Prediction Section
-    st.subheader("🏠 Predict House Price")
-
-    area = st.number_input("Area")
-
-    bedrooms = st.number_input("Bedrooms")
-
-    bathrooms = st.number_input("Bathrooms")
-
-    floors = st.number_input("Floors")
-
-    parking = st.number_input("Parking")
-
-    age = st.number_input("Age")
-
-    # Predict Button
+    # Prediction
     if st.button("Predict Price"):
 
-        prediction = (
-            area * 3000 +
-            bedrooms * 500000 +
-            bathrooms * 300000 +
-            floors * 200000 +
-            parking * 100000 -
-            age * 10000
-        )
+        prediction = model.predict([[bedrooms, size, age]])
 
-        st.success(
-            f"Predicted House Price: ₹ {prediction:,.2f}"
-        )
+        st.success(f"Predicted House Price : {prediction[0]:.2f} Lakhs INR")
