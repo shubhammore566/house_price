@@ -9,9 +9,9 @@ st.set_page_config(
 )
 
 # Title
-st.title("🏠 House Price Prediction")
+st.title("🏠 Smart House Price Prediction System")
 
-# Upload CSV
+# Upload CSV File
 uploaded_file = st.file_uploader(
     "Upload CSV File",
     type=["csv"]
@@ -22,76 +22,90 @@ if uploaded_file is not None:
     # Read CSV
     df = pd.read_csv(uploaded_file)
 
-    # Limit Data
+    # Limit rows for speed
     df = df.head(100)
 
-    # Dataset
+    # Dataset Preview
     st.subheader("📄 Dataset Preview")
 
     st.dataframe(df.head(10))
 
-    # Dataset Info
+    # Dataset Information
     st.subheader("📌 Dataset Information")
 
-    st.write(f"Rows : {df.shape[0]}")
+    col1, col2 = st.columns(2)
 
-    st.write(f"Columns : {df.shape[1]}")
+    col1.metric("Rows", df.shape[0])
+
+    col2.metric("Columns", df.shape[1])
 
     # Numeric Columns
     numeric_cols = df.select_dtypes(
         include=np.number
     ).columns.tolist()
 
-    # Correlation
+    # Correlation Matrix
     if len(numeric_cols) > 1:
 
         st.subheader("📈 Correlation Matrix")
 
-        st.dataframe(
-            df[numeric_cols].corr()
-        )
+        corr = df[numeric_cols].corr()
+
+        st.dataframe(corr)
 
     # Linear Regression Graph
     if len(numeric_cols) >= 2:
 
         st.subheader("📉 Linear Regression Graph")
 
+        # Select X-axis
         x_col = st.selectbox(
             "Select X-axis",
             numeric_cols,
-            key="x"
+            key="x_axis"
         )
 
+        # Remove duplicate option
+        y_options = [
+            col for col in numeric_cols
+            if col != x_col
+        ]
+
+        # Select Y-axis
         y_col = st.selectbox(
             "Select Y-axis",
-            numeric_cols,
-            key="y"
+            y_options,
+            key="y_axis"
         )
 
-        # Sort Values
+        # Graph Data
         graph_df = df[[x_col, y_col]].dropna()
 
+        # Sort Values
         graph_df = graph_df.sort_values(
             by=x_col
         )
 
-        # Create Simple Regression Line
+        # X and Y
         x = graph_df[x_col]
 
         y = graph_df[y_col]
 
-        # Best Fit Line using numpy
+        # Regression Line
         m, b = np.polyfit(x, y, 1)
 
-        graph_df["Regression_Line"] = m * x + b
+        graph_df["Regression_Line"] = (
+            m * x + b
+        )
 
+        # Show Line Chart
         st.line_chart(
             graph_df[
                 [y_col, "Regression_Line"]
             ]
         )
 
-    # Accuracy
+    # Accuracy Section
     st.subheader("✅ Model Accuracy")
 
     st.success("Training Accuracy : 95.5%")
