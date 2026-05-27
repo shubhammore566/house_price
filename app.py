@@ -22,7 +22,7 @@ if uploaded_file is not None:
     # Read CSV
     df = pd.read_csv(uploaded_file)
 
-    # Limit rows for fast performance
+    # Limit rows for performance
     df = df.head(100)
 
     # Dataset Preview
@@ -53,12 +53,12 @@ if uploaded_file is not None:
 
         st.dataframe(corr)
 
-    # Scatter Plot
+    # Scatter Plot + Best Fit Line
     if len(numeric_cols) >= 2:
 
-        st.subheader("📊 Scatter Plot with Regression Line")
+        st.subheader("📊 Scatter Plot with Best Fit Line")
 
-        # Select X-axis
+        # X-axis
         x_col = st.selectbox(
             "Select X-axis",
             numeric_cols,
@@ -71,7 +71,7 @@ if uploaded_file is not None:
             if col != x_col
         ]
 
-        # Select Y-axis
+        # Y-axis
         y_col = st.selectbox(
             "Select Y-axis",
             y_options,
@@ -81,14 +81,7 @@ if uploaded_file is not None:
         # Graph Data
         graph_df = df[[x_col, y_col]].dropna()
 
-        # Scatter Plot
-        st.scatter_chart(
-            graph_df,
-            x=x_col,
-            y=y_col
-        )
-
-        # Regression Line Equation
+        # X and Y
         x = graph_df[x_col]
 
         y = graph_df[y_col]
@@ -96,8 +89,32 @@ if uploaded_file is not None:
         # Best Fit Line
         m, b = np.polyfit(x, y, 1)
 
-        st.write(
-            f"📉 Regression Equation : y = {m:.2f}x + {b:.2f}"
+        graph_df["Best_Fit_Line"] = (
+            m * x + b
+        )
+
+        # Sort values
+        graph_df = graph_df.sort_values(
+            by=x_col
+        )
+
+        # Scatter Plot
+        st.scatter_chart(
+            graph_df,
+            x=x_col,
+            y=y_col
+        )
+
+        # Best Fit Line
+        st.line_chart(
+            graph_df.set_index(x_col)[
+                "Best_Fit_Line"
+            ]
+        )
+
+        # Equation
+        st.success(
+            f"📉 Best Fit Line Equation : y = {m:.2f}x + {b:.2f}"
         )
 
     # Accuracy Section
