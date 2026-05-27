@@ -1,12 +1,9 @@
 import streamlit as st
 import pandas as pd
-import pickle
-
-# Load trained model
-model = pickle.load(open('model.pkl', 'rb'))
+from sklearn.linear_model import LinearRegression
 
 # Title
-st.title("House Price Prediction App")
+st.title("House Price Prediction")
 
 # Upload CSV File
 uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
@@ -20,11 +17,19 @@ if uploaded_file is not None:
     st.subheader("Dataset")
     st.write(df.head())
 
-    # Show Shape
-    st.subheader("Dataset Shape")
-    st.write(df.shape)
+    # Features and Target
+    X = df[["Bedrooms", "Size_sqft", "Age_years"]]
 
-    # User Input
+    y = df["Price_Lakhs_INR"]
+
+    # Train Model
+    model = LinearRegression()
+
+    model.fit(X, y)
+
+    st.success("Model Trained Successfully")
+
+    # User Inputs
     st.subheader("Enter House Details")
 
     bedrooms = st.number_input("Bedrooms", min_value=1)
@@ -36,8 +41,10 @@ if uploaded_file is not None:
     # Prediction
     if st.button("Predict Price"):
 
-        prediction = model.predict([[bedrooms, size_sqft, age_years]])
+        prediction = model.predict(
+            [[bedrooms, size_sqft, age_years]]
+        )
 
         st.success(
-            f"Predicted House Price: {prediction[0]:.2f} Lakhs INR"
+            f"Predicted Price: {prediction[0]:.2f} Lakhs INR"
         )
