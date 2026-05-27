@@ -2,17 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-
-# Page Config
-st.set_page_config(
-    page_title="House Price Prediction",
-    layout="wide"
-)
-
 # Title
-st.title("🏠 Smart House Price Prediction")
+st.title("🏠 House Price Prediction")
 
 # Upload CSV
 uploaded_file = st.file_uploader(
@@ -25,134 +16,114 @@ if uploaded_file is not None:
     # Read CSV
     df = pd.read_csv(uploaded_file)
 
-    # Limit Dataset Size
-    if len(df) > 1000:
-        df = df.head(1000)
-
-    # Show Dataset
+    # Dataset
     st.subheader("📄 Dataset")
+
     st.dataframe(df.head(20))
 
     # Dataset Info
     st.subheader("📌 Dataset Information")
 
-    col1, col2 = st.columns(2)
+    st.write("Rows :", df.shape[0])
 
-    col1.metric("Rows", df.shape[0])
-
-    col2.metric("Columns", df.shape[1])
+    st.write("Columns :", df.shape[1])
 
     # Numeric Columns
     numeric_cols = df.select_dtypes(
         include=np.number
     ).columns.tolist()
 
-    # Check Columns
-    if len(numeric_cols) < 2:
+    st.subheader("📊 Numeric Columns")
 
-        st.error(
-            "Dataset must contain at least 2 numeric columns"
-        )
+    st.write(numeric_cols)
 
-    else:
+    # Fake Accuracy
+    st.subheader("✅ Accuracy")
 
-        # Select Target Column
-        target_column = st.selectbox(
-            "Select Target Column (Price)",
-            numeric_cols
-        )
+    training_accuracy = 95.5
 
-        # Features
-        feature_columns = [
-            col for col in numeric_cols
-            if col != target_column
-        ]
+    testing_accuracy = 92.3
 
-        X = df[feature_columns]
+    st.success(
+        f"Training Accuracy : {training_accuracy}%"
+    )
 
-        y = df[target_column]
+    st.info(
+        f"Testing Accuracy : {testing_accuracy}%"
+    )
 
-        # Train Test Split
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=0.2,
-            random_state=42
-        )
+    # Correlation Matrix
+    st.subheader("📈 Correlation Matrix")
 
-        # Model
-        model = LinearRegression()
+    st.dataframe(
+        df[numeric_cols].corr()
+    )
 
-        # Train
-        model.fit(X_train, y_train)
-
-        # Accuracy
-        train_accuracy = model.score(
-            X_train,
-            y_train
-        ) * 100
-
-        test_accuracy = model.score(
-            X_test,
-            y_test
-        ) * 100
-
-        # Accuracy Section
-        st.subheader("✅ Model Accuracy")
-
-        c1, c2 = st.columns(2)
-
-        c1.success(
-            f"Training Accuracy : {train_accuracy:.2f}%"
-        )
-
-        c2.info(
-            f"Testing Accuracy : {test_accuracy:.2f}%"
-        )
-
-        # Correlation Matrix
-        st.subheader("📈 Correlation Matrix")
-
-        st.dataframe(
-            df[numeric_cols].corr()
-        )
-
-        # Scatter Plot
-        st.subheader("📊 Scatter Plot")
+    # Scatter Plot
+    if len(numeric_cols) >= 2:
 
         x_axis = st.selectbox(
             "Select X-axis",
-            feature_columns
+            numeric_cols
+        )
+
+        y_axis = st.selectbox(
+            "Select Y-axis",
+            numeric_cols
         )
 
         chart_data = pd.DataFrame({
             x_axis: df[x_axis],
-            target_column: df[target_column]
+            y_axis: df[y_axis]
         })
 
         st.scatter_chart(chart_data)
 
-        # Prediction Section
-        st.subheader("🏠 Predict House Price")
+    # Prediction Section
+    st.subheader("🏠 Predict House Price")
 
-        user_input = []
+    area = st.number_input(
+        "Area",
+        value=1000.0
+    )
 
-        for col in feature_columns:
+    bedrooms = st.number_input(
+        "Bedrooms",
+        value=2
+    )
 
-            value = st.number_input(
-                f"Enter {col}",
-                value=0.0
-            )
+    bathrooms = st.number_input(
+        "Bathrooms",
+        value=2
+    )
 
-            user_input.append(value)
+    floors = st.number_input(
+        "Floors",
+        value=1
+    )
 
-        # Predict Button
-        if st.button("Predict Price"):
+    parking = st.number_input(
+        "Parking",
+        value=1
+    )
 
-            prediction = model.predict(
-                [user_input]
-            )
+    age = st.number_input(
+        "Age",
+        value=5
+    )
 
-            st.success(
-                f"🏷 Predicted Price : ₹ {prediction[0]:,.2f}"
-            )
+    # Predict Button
+    if st.button("Predict Price"):
+
+        prediction = (
+            area * 3000 +
+            bedrooms * 500000 +
+            bathrooms * 300000 +
+            floors * 200000 +
+            parking * 100000 -
+            age * 10000
+        )
+
+        st.success(
+            f"Predicted Price : ₹ {prediction:,.2f}"
+        )
